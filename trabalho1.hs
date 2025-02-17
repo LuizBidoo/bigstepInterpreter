@@ -131,7 +131,7 @@ cbigStep (While b c, s)
 
 cbigStep (Twice c,s) = cbigStep(Seq c c, s)
 
-cbigStep (RepeatUntil c b,s) = let (_, s1) = cbigStep(c, s) in cbigStep(If (Not b) Skip (RepeatUntil c b, s), s1) --- Faz o teste para saber se segue executando ou não
+-- cbigStep (RepeatUntil c b,s) = let (_, s1) = cbigStep(c, s) in cbigStep(If (Not b) Skip (RepeatUntil c b, s), s1) --- Faz o teste para saber se segue executando ou não
 
 -- cbigStep (ExecN c e,s)
    -- | let (_, s1) = cbigStep (Seq cbigStep(c, s) (Atrib (Var "i") ebigStep(Sub (Var "i") (Num 1))), s)
@@ -139,7 +139,7 @@ cbigStep (RepeatUntil c b,s) = let (_, s1) = cbigStep(c, s) in cbigStep(If (Not 
 
 --cbigStep (Swap (Var x) (Var y),s) --- recebe duas variáveis e troca o conteúdo delas
 
---cbigStep (DAtrrib (Var x) (Var y) e1 e2,s) = -- Dupla atribuição: recebe duas variáveis x e y e duas expressões "e1" e "e2". Faz x:=e1 e y:=e2.
+cbigStep (DAtrrib (Var x) (Var y) e1 e2,s) = (Skip, mudaVar(mudaVar s x (ebigStep(e1, s))) y (ebigStep(e2, s)))-- Dupla atribuição: recebe duas variáveis x e y e duas expressões "e1" e "e2". Faz x:=e1 e y:=e2.
 
 --------------------------------------
 ---
@@ -211,6 +211,9 @@ testeRepeat :: C
 testeRepeat = (RepeatUntil 
     (Atrib (Var "y") (Soma (Var "y") (Num 1)))
     (Igual (Var "y") (Num 5)))
+
+testeDAtrib :: C
+testeDAtrib = (DAtrrib (Var "x") (Var "y") (Num 10) (Num 20))
 
 -- Exemplos de Programas Imperativos:
 
