@@ -131,16 +131,20 @@ cbigStep (While b c, s)
 
 cbigStep (Twice c,s) = cbigStep(Seq c c, s)
 
--- cbigStep (RepeatUntil c b,s) = let (_, s1) = cbigStep(c, s) in cbigStep(If (Not b) Skip (RepeatUntil c b, s), s1) --- Faz o teste para saber se segue executando ou não
+cbigStep (RepeatUntil c b,s) = 
+   let (_, s1) = cbigStep(c, s) 
+      in if bbigStep(b, s1) == False
+         then let (_, s2) = cbigStep(RepeatUntil c b, s1) in (Skip, s2)
+         else (Skip, s1)
+
+cbigStep (Swap (Var x) (Var y),s) = 
+   let var1 = procuraVar s x -- por que não funcionou usar ebigStep ?
+      in let var2 = procuraVar s y
+         in (Skip, mudaVar(mudaVar s x var2) y var1)
 
 -- cbigStep (ExecN c e,s)
    -- | let (_, s1) = cbigStep (Seq cbigStep(c, s) (Atrib (Var "i") ebigStep(Sub (Var "i") (Num 1))), s)
    -- | in cbigStep(If bbigStep(Igual ebigStep(Sub  (Num 0))) Skip (ExecN c e, s1))  ---- ExecN C n: executa o comando C n vezes
-
-cbigStep (Swap (Var x) (Var y),s) = 
-   let var1 = procuraVar s x
-      in let var2 = procuraVar s y
-         in (Skip, mudaVar(mudaVar s x var2) y var1)
 
 cbigStep (DAtrrib (Var x) (Var y) e1 e2,s) = (Skip, mudaVar(mudaVar s x (ebigStep(e1, s))) y (ebigStep(e2, s)))-- Dupla atribuição: recebe duas variáveis x e y e duas expressões "e1" e "e2". Faz x:=e1 e y:=e2.
 
