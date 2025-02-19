@@ -142,9 +142,11 @@ cbigStep (Swap (Var x) (Var y),s) =
       in let var2 = procuraVar s y
          in (Skip, mudaVar(mudaVar s x var2) y var1)
 
--- cbigStep (ExecN c e,s)
-   -- | let (_, s1) = cbigStep (Seq cbigStep(c, s) (Atrib (Var "i") ebigStep(Sub (Var "i") (Num 1))), s)
-   -- | in cbigStep(If bbigStep(Igual ebigStep(Sub  (Num 0))) Skip (ExecN c e, s1))  ---- ExecN C n: executa o comando C n vezes
+cbigStep (ExecN c (Num 0), s) = (Skip, s)
+cbigStep (ExecN c (Num n), s)
+   | n > 0 = let (_, s1) = cbigStep(c, s)
+               in cbigStep(ExecN c (Num (n-1)), s1)
+   | otherwise = (Skip, s)
 
 cbigStep (DAtrrib (Var x) (Var y) e1 e2,s) = (Skip, mudaVar(mudaVar s x (ebigStep(e1, s))) y (ebigStep(e2, s)))-- Dupla atribuição: recebe duas variáveis x e y e duas expressões "e1" e "e2". Faz x:=e1 e y:=e2.
 
@@ -160,6 +162,8 @@ cbigStep (DAtrrib (Var x) (Var y) e1 e2,s) = (Skip, mudaVar(mudaVar s x (ebigSte
 exSigma2 :: Memoria
 exSigma2 = [("x",3), ("y",0), ("z",0)]
 
+exSigma3 :: Memoria
+exSigma3 = [("x", 5), ("y", 0)]
 
 ---
 --- O progExp1 é um programa que usa apenas a semântica das expressões aritméticas. Esse
@@ -219,6 +223,9 @@ testeRepeat = (RepeatUntil
     (Atrib (Var "y") (Soma (Var "y") (Num 1)))
     (Igual (Var "y") (Num 5)))
 
+testeExecN :: C
+testeExecN = ExecN (Atrib (Var "x") (Soma (Var "x") (Num 1))) (Num 5)
+
 testeDAtrib :: C
 testeDAtrib = (DAtrrib (Var "x") (Var "y") (Num 10) (Num 20))
 
@@ -233,3 +240,18 @@ fatorial = (Seq (Atrib (Var "y") (Num 1))
                 (While (Not (Igual (Var "x") (Num 1)))
                        (Seq (Atrib (Var "y") (Mult (Var "y") (Var "x")))
                             (Atrib (Var "x") (Sub (Var "x") (Num 1))))))
+
+-- Exemplos de programas (Loop, dupla atribuicao, Do While)
+testeLoop :: C
+testeLoop = Seq (Atrib (Var "y") (Num 0))  -- y := 0
+                 (While (Not (Igual (Var "x") (Num 0)))  -- enquanto x ≠ 0
+                    (Seq (Atrib (Var "y") (Soma (Var "y") (Var "x")))  -- y := y + x
+                         (Atrib (Var "x") (Sub (Var "x") (Num 1))))) -- x := x - 1
+
+testeDuplaAtrib :: C
+testeDuplaAtrib = DAtrrib (Var "x") (Var "y") (Var "y") (Var "x")  -- x := y, y := x
+
+testeDoWhile :: C
+testeDoWhile = RepeatUntil 
+    (Atrib (Var "y") (Soma (Var "y") (Num 1)))  -- y := y + 1
+    (Leq (Num 5) (Var "y"))  -- até que 5 ≤ y
